@@ -14,9 +14,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			docker.force_host_vm = true
     			docker.vagrant_machine = "#{DOCKER_HOST_NAME}"
     			docker.vagrant_vagrantfile = "#{DOCKER_HOST_VAGRANTFILE}"
-			docker.has_ssh = true
-			docker.name = "openjdk-container"
-			docker.remains_running = false
+			docker.has_ssh = false
+			docker.remains_running = true
 			docker.create_args = ['--privileged=true']
 			docker.volumes=["/var/lib/docker:/var/lib/docker", "/tmp:/output"]
   		end
