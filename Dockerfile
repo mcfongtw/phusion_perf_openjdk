@@ -1,10 +1,7 @@
-# ubuntu-perf-openjdk-8
 #
-#
-# Extends ubuntu-perf-base with java 8 openjdk jdk installation
-#
-# TODO : Move to another repo and rebuild docker build automation
-#
+# Existing Tags:
+# mcfongtw/ubuntu_perf_openjdk:latest
+# mcfongtw/ubuntu_perf_openjdk:8
 #
 FROM mcfongtw/ubuntu_perf_tools:16.04
 
@@ -51,7 +48,7 @@ RUN export JAVA_HOME
 
 ####################################################### 
 # Compile perf-map-agent from source code
-RUN git clone --depth=1 https://github.com/jvm-profiling-tools/perf-map-agent.git /workspace/perf-map-agent
+RUN git clone --depth=1 https://github.com/jvm-profiling-tools/perf-map-agent /workspace/perf-map-agent
 
 # Install build required dependencies
 RUN apt-get update && \
@@ -64,9 +61,13 @@ RUN cd /workspace/perf-map-agent/ && \
 
 ####################################################### 
 # Setup entry point
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY docker-entrypoint.sh /workspace/docker-entrypoint.sh
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/workspace/docker-entrypoint.sh"]
+
+####################################################### 
+# Copy perfJava
+COPY perfJava /workspace/perfJava
 
 ####################################################### 
 # Clean up APT when done.

@@ -1,0 +1,81 @@
+# vim: filetype=sh
+#!/bin/bash
+#
+
+JVM_EXPERIMENTAL_OPTS=" -XX:-Inline "
+
+JVM_PERF_OPTS=" -XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints $JVM_EXPERIMENTAL_OPTS"
+
+JVM_OPTS="$JVM_PERF_OPTS "
+
+PERF_RECORD_FREQ="299"
+
+PERF_RECORD_TIME_IN_SEC="60"
+
+PERF_MAP_AGENT_DIR="/workspace/perf-map-agent"
+
+FLAME_GRAPH_DIR="/workspace/FlameGraph"
+
+PERF_OUTPUT_DATA_PATH="/workspace/perf.data"
+
+function perf_run {
+	local demo_pid=`cat demo.pid`
+	perf record $PERF_RECORD_OPTS
+
+	cd "$PERF_MAP_AGENT_DIR/out"
+	java -cp attach-main.jar:$JAVA_HOME/lib/tools.jar net.virtualvoid.perf.AttachOnce $demo_pid
+
+	cd /workspace
+	echo "Record done! Killing DEMO [$demo_pid]!"
+	kill -9 $demo_pid
+	mv demo.pid demo.pid.old
+}
+
+function gen_flamegraph {
+	cd $FLAME_GRAPH_DIR
+
+	perf script --input=$PERF_OUTPUT_DATA_PATH | ./stackcollapse-perf.pl | ./flamegraph.pl --color=java --hash > /vagrant/flamegraph.svg
+}
+
+function analyze_system_cpu {
+	echo "You picked ($REPLY) [$tool_opt - $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec] "
+	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	perf_run
+	gen_flamegraph
+}
+
+function analyze_process_cpu {
+	echo "You picked ($REPLY) [$tool_opt - $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
+	local demo_pid=`cat demo.pid` 
+	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -p $demo_pid -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	perf_run
+	gen_flamegraph
+}
+
+function run_jar_in_background {
+	local jarPath=$1
+	# Running jar application in the background
+	java $JVM_OPTS -jar $jarPath &
+	echo "$!" > demo.pid
+}
+
+usage() {
+    echo $"Usage: $0 {system/process} $1"
+    exit 1
+}
+
+case "$1" in
+    system)
+		local jarPath=$2
+		run_jar_in_background $jarPath
+		analyze_system_cpu
+        ;;
+    process)
+		local jarPath=$2
+		run_jar_in_background $jarPath
+		analyze_process_cpu
+        ;;
+    *)  
+        usage
+        ;;
+esac
