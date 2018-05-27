@@ -47,6 +47,17 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN export JAVA_HOME
 
 ####################################################### 
+#FIXME: The perf installation did not propagated properly from upstream. Remove this once resolved.
+#
+# perf related
+#
+RUN apt-get update && \ 
+	apt-get install -y linux-tools-common linux-tools-generic linux-tools-`uname -r`
+#
+# Set permission to collect perf stat
+# -1 - Not paranoid at all
+RUN echo 'kernel.perf_event_paranoid = -1' > /etc/sysctl.d/perf.conf
+####################################################### 
 # Compile perf-map-agent from source code
 RUN git clone --depth=1 https://github.com/jvm-profiling-tools/perf-map-agent /workspace/perf-map-agent
 
@@ -62,6 +73,8 @@ RUN cd /workspace/perf-map-agent/ && \
 ####################################################### 
 # Setup entry point
 COPY docker-entrypoint.sh /workspace/docker-entrypoint.sh
+
+RUN chmod +x /workspace/docker-entrypoint.sh
 
 ENTRYPOINT ["/workspace/docker-entrypoint.sh"]
 
