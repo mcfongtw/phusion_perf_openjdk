@@ -18,6 +18,8 @@ FLAME_GRAPH_DIR="/workspace/FlameGraph"
 
 PERF_OUTPUT_DATA_PATH="/workspace/perf.data"
 
+JAR_PATH=""
+
 function perf_run {
 	local demo_pid=`cat demo.pid`
 	perf record $PERF_RECORD_OPTS
@@ -38,14 +40,12 @@ function gen_flamegraph {
 }
 
 function analyze_system_cpu {
-	echo "You picked ($REPLY) [$tool_opt - $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec] "
 	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
 	perf_run
 	gen_flamegraph
 }
 
 function analyze_process_cpu {
-	echo "You picked ($REPLY) [$tool_opt - $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 	local demo_pid=`cat demo.pid` 
 	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -p $demo_pid -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
 	perf_run
@@ -53,9 +53,8 @@ function analyze_process_cpu {
 }
 
 function run_jar_in_background {
-	local jarPath=$1
 	# Running jar application in the background
-	java $JVM_OPTS -jar $jarPath &
+	java $JVM_OPTS -jar $JAR_PATH &
 	echo "$!" > demo.pid
 }
 
@@ -66,13 +65,15 @@ usage() {
 
 case "$1" in
     system)
-		local jarPath=$2
-		run_jar_in_background $jarPath
+		echo "You picked (System) [$PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
+		JAR_PATH=$2
+		run_jar_in_background
 		analyze_system_cpu
         ;;
     process)
-		local jarPath=$2
-		run_jar_in_background $jarPath
+		echo "You picked (process) [$PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec] "
+		JAR_PATH=$2
+		run_jar_in_background
 		analyze_process_cpu
         ;;
     *)  
