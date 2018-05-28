@@ -2,4 +2,11 @@
 .vagrant/
 *.log
 
+# idea related
+.idea/
+
+# python related
+cli/__pycache__/
+venv/
+
 

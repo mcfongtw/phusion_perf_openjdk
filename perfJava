@@ -12,6 +12,8 @@ PERF_RECORD_FREQ="299"
 
 PERF_RECORD_TIME_IN_SEC="60"
 
+PERF_PROFILE_EVENT="cycle"
+
 PERF_MAP_AGENT_DIR="/workspace/perf-map-agent"
 
 FLAME_GRAPH_DIR="/workspace/FlameGraph"
@@ -40,14 +42,27 @@ function gen_flamegraph {
 }
 
 function analyze_system_cpu {
-	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	PERF_RECORD_OPTS=" -e $PERF_PROFILE_EVENT -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	perf_run
+	gen_flamegraph
+}
+
+function analyze_system_io {
+	PERF_RECORD_OPTS=" -e $PERF_PROFILE_EVENT --output=$PERF_OUTPUT_DATA_PATH -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
 	perf_run
 	gen_flamegraph
 }
 
 function analyze_process_cpu {
 	local demo_pid=`cat demo.pid` 
-	PERF_RECORD_OPTS=" -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -p $demo_pid -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	PERF_RECORD_OPTS=" -e $PERF_PROFILE_EVENT -F $PERF_RECORD_FREQ --output=$PERF_OUTPUT_DATA_PATH -p $demo_pid -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
+	perf_run
+	gen_flamegraph
+}
+
+function analyze_process_io {
+	local demo_pid=`cat demo.pid` 
+	PERF_RECORD_OPTS=" -e $PERF_PROFILE_EVENT --output=$PERF_OUTPUT_DATA_PATH -p $demo_pid -a -g -- sleep $PERF_RECORD_TIME_IN_SEC"
 	perf_run
 	gen_flamegraph
 }
@@ -59,7 +74,7 @@ function run_jar_in_background {
 }
 
 usage() {
-    echo $"Usage: $0 {system/process} $1"
+	echo $"Usage: $0 {system/process} $1 [{cpu/io}]"
     exit 1
 }
 
@@ -68,13 +83,36 @@ case "$1" in
 		echo "You picked (System) [$PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 		JAR_PATH=$2
 		run_jar_in_background
-		analyze_system_cpu
+	
+		if [ -z "$3" || "$3" == "cpu" ]
+		then
+			PERF_PROFILE_EVENT="cycle"
+			analyze_system_cpu
+		elif [ "$3" == "io" ]
+		then			
+			PERF_PROFILE_EVENT="block:block_rq_insert"
+			analyze_system_io
+		else
+			usage
+		fi
+
         ;;
     process)
 		echo "You picked (process) [$PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec] "
 		JAR_PATH=$2
 		run_jar_in_background
-		analyze_process_cpu
+		
+		if [ -z "$3" || "$3" == "cpu" ]
+		then
+			PERF_PROFILE_EVENT="cycle"
+			analyze_process_cpu
+		elif [ "$3" == "io" ]
+		then			
+			PERF_PROFILE_EVENT="block:block_rq_insert"
+			analyze_process_io
+		else
+			usage
+		fi
         ;;
     *)  
         usage
