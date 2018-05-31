@@ -47,6 +47,19 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN export JAVA_HOME
 
 ####################################################### 
+# SDKMan
+RUN apt-get install -y zip unzip --no-install-recommends
+RUN curl -s "https://get.sdkman.io" | bash
+ENV SDKMAN_DIR /workspace/.sdkman
+RUN set -x \
+    && echo "sdkman_auto_answer=true" > $SDKMAN_DIR/etc/config \
+    && echo "sdkman_auto_selfupdate=false" >> $SDKMAN_DIR/etc/config \
+    && echo "sdkman_insecure_ssl=false" >> $SDKMAN_DIR/etc/config
+####################################################### 
+# Maven
+RUN /bin/bash -c " source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install maven"
+
+####################################################### 
 #FIXME: The perf installation did not propagated properly from upstream. Remove this once resolved.
 #
 # perf related
