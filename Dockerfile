@@ -48,7 +48,8 @@ RUN export JAVA_HOME
 
 ####################################################### 
 # SDKMan
-RUN apt-get install -y zip unzip --no-install-recommends
+RUN apt-get update && \
+	apt-get install -y zip unzip;
 RUN curl -s "https://get.sdkman.io" | bash
 ENV SDKMAN_DIR /workspace/.sdkman
 RUN set -x \
