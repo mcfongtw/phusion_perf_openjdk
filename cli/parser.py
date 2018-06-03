@@ -33,12 +33,42 @@ class PerfEventType(Enum):
 
 class PerfProfileParser(AbstractPerfParser):
 
-    def __init__(self, is_process = True, frequency = 99, sleep_duration=60, enable_call_graph=True):
-        parser = argparse.ArgumentParser()
+    _parser = None
+
+    _args = None
+
+    def __init__(self):
+        self._parser = argparse.ArgumentParser()
+
+        # either system wide or process wide profiling is accepted
+        system_or_process_group = self._parser.add_mutually_exclusive_group(required=True)
+        system_or_process_group.add_argument("-a", "--all", help="system wide profiling")
+        system_or_process_group.add_argument("-p", "--p", help="process <pid> profiling", type=int, action='store_const')
 
         # input jar path
-        parser.add_argument("-i", "--input", help="input jar path", required=True)
-        # measuring metric type
-        parser.add_argument("-m", "--metric", help="measuring metric type", required=True)
+        self._parser.add_argument("-i", "--input", help="input executable path", required=True)
 
-        parser.add_argument("-t", "--type", help="process or system wide profiling", required=False)
+        # measuring frequency rate
+        self._parser.add_argument("-f", "--frequency", help="Profile at this frequency", required=False, type=int, default=199, const=199)
+
+        # measuring duration
+        self._parser.add_argument("-s", "--sleep", help="Profile for this duration", required=True, type=int, default=60, const=60)
+
+        # measuring event type
+        self._parser.add_argument("-e", "--event", help="Select the PMU event", required=True, default='cycles', const='cycles')
+
+        self._parser.add_argument("-c", "--count", help="Event period to sample", required=False)
+
+        # enable call graph
+        self._parser.add_argument("-g", "--call-graph", help="Enables call-graph (stack chain/backtrace) recording", required=False)
+
+
+    def parse(self, command=""):
+       self._args=self._parser.parse_args(command.split())
+
+    #TODO: builder pattern
+    def build_perf_command:
+        return "perf record "
+
+    def get_args(self):
+        return self._args
