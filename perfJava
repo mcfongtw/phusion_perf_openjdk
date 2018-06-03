@@ -12,7 +12,7 @@ PERF_RECORD_FREQ="299"
 
 PERF_RECORD_TIME_IN_SEC="60"
 
-PERF_PROFILE_EVENT="cycle"
+PERF_PROFILE_EVENT="cycles"
 
 PERF_MAP_AGENT_DIR="/workspace/perf-map-agent"
 
@@ -74,23 +74,24 @@ function run_jar_in_background {
 }
 
 usage() {
-	echo $"Usage: $0 {system/process} $1 [{cpu/io}]"
+	echo $"Usage: $0 {system/process} {JAR} [{cpu/io}]"
     exit 1
 }
 
 case "$1" in
     system)
-		echo "You picked (System) [$PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 		JAR_PATH=$2
 		run_jar_in_background
 	
-		if [ -z "$3" || "$3" == "cpu" ]
+		if [ -z "$3" ] || [ "$3" == "cpu" ]
 		then
-			PERF_PROFILE_EVENT="cycle"
+			PERF_PROFILE_EVENT="cycles"
+			echo "You picked ($1) [$PERF_PROFILE_EVENT / $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 			analyze_system_cpu
 		elif [ "$3" == "io" ]
 		then			
 			PERF_PROFILE_EVENT="block:block_rq_insert"
+			echo "You picked ($1) [$PERF_PROFILE_EVENT / $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 			analyze_system_io
 		else
 			usage
@@ -102,13 +103,15 @@ case "$1" in
 		JAR_PATH=$2
 		run_jar_in_background
 		
-		if [ -z "$3" || "$3" == "cpu" ]
+		if [ -z "$3" ] || [ "$3" == "cpu" ]
 		then
-			PERF_PROFILE_EVENT="cycle"
+			PERF_PROFILE_EVENT="cycles"
+			echo "You picked ($1) [$PERF_PROFILE_EVENT / $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 			analyze_process_cpu
 		elif [ "$3" == "io" ]
 		then			
 			PERF_PROFILE_EVENT="block:block_rq_insert"
+			echo "You picked ($1) [$PERF_PROFILE_EVENT / $PERF_RECORD_TIME_IN_SEC sec / $PERF_RECORD_FREQ smp / sec]"
 			analyze_process_io
 		else
 			usage
