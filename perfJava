@@ -4,7 +4,7 @@
 
 JVM_EXPERIMENTAL_OPTS=" -XX:-Inline "
 
-JVM_PERF_OPTS=" -XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints $JVM_EXPERIMENTAL_OPTS"
+JVM_PERF_OPTS=" -XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:MaxInlineSize=1 -XX:InlineSmallCode=1 $JVM_EXPERIMENTAL_OPTS"
 
 JVM_OPTS="$JVM_PERF_OPTS "
 
