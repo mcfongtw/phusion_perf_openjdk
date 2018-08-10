@@ -1,9 +1,9 @@
 #
 # Existing Tags:
-# mcfongtw/ubuntu_perf_openjdk:latest
-# mcfongtw/ubuntu_perf_openjdk:8
+# mcfongtw/phusion_perf_openjdk:latest
+# mcfongtw/phusion_perf_openjdk:8
 #
-FROM mcfongtw/ubuntu_perf_tools:16.04
+FROM mcfongtw/phusion_perf_platform:16.04
 
 MAINTAINER Michael Fong <mcfong.open@gmail.com>
 
